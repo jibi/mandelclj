@@ -3,26 +3,24 @@
 ;;
 ;; complex numbers stuff
 ;;
-(defn c_+ [x y]
-	[(+ (x 0) (y 0)),
-	 (+ (x 1) (y 1))])
+(defn c+ [x y]
+	(map + x y))
 
-(defn c_* [x y]
-	[(- (* (x 0) (y 0)) (* (x 1) (y 1)))
-	 (+ (* (x 1) (y 0)) (* (x 0) (y 1)))])
+(defn c* [[x0 x1] [y0 y1]]
+	[(- (* x0 y0) (* x1 y1)) (+ (* x1 y0) (* x0 y1))])
 
-(defn c_abs [x]
-	(Math/sqrt (+ (* (x 0) (x 0)) (* (x 1) (x 1)))))
+(defn cabs [[x0 x1]]
+	(Math/sqrt (+ (* x0 x0) (* x1 x1))))
 
 ;;
 ;; mandelbrot stuff
 ;;
 (defn mandelbrot-fun [z c]
-	(c_+ c (c_* z z)))
+	(c+ c (c* z z)))
 
 (defn terminate-p [niter z]
 	(or (= niter max-iterations)
-		(> (c_abs z) 2.0)))
+		(> (cabs z) 2.0)))
 
 (defn mandelbrot-eval [c]
 	(letfn [(x-mandelbrot-eval [niter z]
