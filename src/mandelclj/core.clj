@@ -33,22 +33,22 @@
 
 	(x-mandelbrot-eval 0 [0 0])))
 
-(defn yloop [count x y ystep ynsteps l]
-	(if (< count ynsteps)
-		(yloop (+ count 1) x (+ y ystep) ystep ynsteps
-			(conj l (mandelbrot-eval [y x])))
+(defn xloop [count x y xstep xnsteps l]
+	(if (< count xnsteps)
+		(xloop (+ count 1) (+ x xstep) y xstep xnsteps
+			(conj l (mandelbrot-eval [x y])))
 	l))
 
-(defn xloop [count x xstep xnsteps ymin ystep ynsteps l]
-	(if (< count xnsteps)
-		(xloop (+ count 1) (+ x xstep) xstep xnsteps ymin ystep ynsteps
-			(conj l (yloop 0 x ymin ystep ynsteps [])))
+(defn yloop [count y ystep ynsteps xmin xstep xnsteps l]
+	(if (< count ynsteps)
+		(yloop (+ count 1) (+ y ystep) ystep ynsteps xmin xstep xnsteps
+			(conj l (xloop 0 xmin y xstep xnsteps [])))
 	l))
 
 (defn compute-mandelbrot-set [xmin xmax ymin ymax xnsteps ynsteps]
 	(let [xstep (/ (- xmax xmin) (- xnsteps 1))
 		ystep (/ (- ymax ymin) (- ynsteps 1))]
-		(xloop 0 xmin xstep xnsteps ymin ystep ynsteps [])
+		(yloop 0 ymin ystep ynsteps xmin xstep xnsteps [])
 	))
 
 (defn printm [x]
@@ -59,6 +59,6 @@
 	(println ""))
 
 (defn plot-mandelbrot [nsteps]
-	(dorun (map printmln (compute-mandelbrot-set -1 1 -1.5 0.5 nsteps (* nsteps 2)))))
+	(dorun (map printmln (compute-mandelbrot-set -1.5 0.5 -1.0 1.0 (* nsteps 2) nsteps))))
 
 (plot-mandelbrot 50)
