@@ -1,58 +1,48 @@
-(def max-iterations 255)
+(ns mandelclj.core
+  (:require [mandelclj.complex :as c]))
 
-;;
-;; complex numbers stuff
-;;
-(defn c+ [x y]
-	(map + x y))
+(def ^:private max-iterations 255)
 
-(defn c* [[x0 x1] [y0 y1]]
-	[(- (* x0 y0) (* x1 y1)) (+ (* x1 y0) (* x0 y1))])
-
-(defn cabs [[x0 x1]]
-	(Math/sqrt (+ (* x0 x0) (* x1 x1))))
-
-;;
-;; mandelbrot stuff
-;;
 (defn mandelbrot-fun [z c]
-	(c+ c (c* z z)))
+  (c/+ c (c/* z z)))
 
-(defn terminate-p [niter z]
-	(or (= niter max-iterations) (> (cabs z) 2.0)))
+(defn terminate? [iter-n z]
+  (or (== iter-n max-iterations)
+      (> (c/abs z) 2.0)))
 
 (defn mandelbrot-eval [c]
-	(letfn [(x-mandelbrot-eval [niter z]
-		(if (terminate-p niter z)
-			niter
-			(x-mandelbrot-eval (+ niter 1) (mandelbrot-fun z c))))]
-	(x-mandelbrot-eval 0 [0 0])))
+  (letfn [(x-mandelbrot-eval [iter-n z]
+            (if (terminate? iter-n z)
+              iter-n
+              (x-mandelbrot-eval (inc iter-n)
+                                 (mandelbrot-fun z c))))]
+    (x-mandelbrot-eval 0 [0 0])))
 
-(defn xloop [count x y xstep xnsteps l]
-	(if (< count xnsteps)
-		(xloop (+ count 1) (+ x xstep) y xstep xnsteps (conj l (mandelbrot-eval [x y])))
-		l))
-
-(defn yloop [count y ystep ynsteps xmin xstep xnsteps l]
-	(if (< count ynsteps)
-		(yloop (+ count 1) (+ y ystep) ystep ynsteps xmin xstep xnsteps (conj l (xloop 0 xmin y xstep xnsteps [])))
-		l))
-
-(defn compute-mandelbrot-set [xmin xmax ymin ymax xnsteps ynsteps]
-	(let [xstep (/ (- xmax xmin) (- xnsteps 1)) ystep (/ (- ymax ymin) (- ynsteps 1))]
-		(yloop 0 ymin ystep ynsteps xmin xstep xnsteps [])))
+(defn compute-mandelbrot-set
+  [[x-min x-max x-steps] [y-min y-max y-steps]]
+  (let [inc-x (partial + (/ (- x-max x-min) (dec x-steps)))
+        inc-y (partial + (/ (- y-max y-min) (dec y-steps)))]
+    (loop [count 0, y y-min, l []]
+      (if (< count y-steps)
+        (let [e (loop [count 0, x x-min, l []]
+                  (if (< count x-steps)
+                    (recur (inc count) (inc-x x) (conj l (mandelbrot-eval [x y])))
+                    l))]
+         (recur (inc count) (inc-y y) (conj l e)))
+        l))))
 
 (defn printm [x]
-	(if (= x max-iterations)
-		(print "*")
-		(print " ")))
+  (print
+   (if (== x max-iterations)
+     "*"
+     " ")))
 
-(defn printmln [l]
-	(dorun (map printm l))
-	(println ""))
+(defn plot-mandelbrot [n-steps]
+  (doseq [e (compute-mandelbrot-set [-1.5 0.5 (* n-steps 2)]
+                                    [-1.0 1.0 n-steps])]
+    (doseq [e e]
+      (printm e))
+    (println)))
 
-(defn plot-mandelbrot [nsteps]
-	(dorun (map printmln (compute-mandelbrot-set -1.5 0.5 -1.0 1.0 (* nsteps 2) nsteps))))
-
-(plot-mandelbrot 50)
-
+(defn -main [& _]
+  (plot-mandelbrot 50))
